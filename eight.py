@@ -117,7 +117,7 @@ class Puzzle():
         
         #Add code to determine whether this puzzle is solved
         
-        return False #Change this!
+        return (self.state == [0,1,2,3,4,5,6,7,8,9])
 
         ######## TASK 1.1 END   ##########
 
