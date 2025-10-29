@@ -51,6 +51,18 @@ ALGORITHM_RESULTS = {
         nodes=[41.1, 1176.025, 11163.95, 116303.125],
         lengths=[7.0, 15.0, 21.0, 30.05],
     ),
+    ("IDA*", "Tiles Out of Place"): make_metrics(
+        nodes=[35.925, 1462.925, 27242.825, 2714459.725],
+        lengths=[7.0, 15.0, 21.0, 30.05],
+    ),
+    ("IDA*", "Tiles Out of Row/Column"): make_metrics(
+        nodes=[126.725, 6590.3, 123429.825, 27768106.0],
+        lengths=[7.0, 15.0, 21.0, 30.05],
+    ),
+    ("IDA*", "Manhattan Distance"): make_metrics(
+        nodes=[90.825, 3667.175, 50837.875, 9955737.0],
+        lengths=[7.0, 15.0, 21.0, 30.05],
+    ),
 }
 
 def _series_from_metrics(metrics):
@@ -59,7 +71,7 @@ def _series_from_metrics(metrics):
     return lengths, nodes
 
 def plot_per_algorithm(results, baseline_key=("Iterative Deepening", "N/A")):
-    algorithms = ["Iterative Deepening", "Uniform Cost", "Greedy Best-First", "A*"]
+    algorithms = ["Iterative Deepening", "Uniform Cost", "Greedy Best-First", "A*", "IDA*"]
     baseline_lengths, baseline_nodes = _series_from_metrics(results[baseline_key])
 
     for algorithm in algorithms:

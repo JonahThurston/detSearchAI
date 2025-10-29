@@ -291,110 +291,78 @@ def get_tile_column(tile):
     
 def run_iterative_search(start_node):
     """
-    This runs an iterative deepening search
-    It caps the depth of the search at 40 (no 8-puzzles have solutions this long)
+    Run Iterative Deepening A* (IDA*) search starting from start_node.
+    Thresholds increase on the combined g+h cost until a solution is found or limits are hit.
     """
-    #Our initial depth limit
-    depth_limit = 1
-    
-    #Maximum depth limit
-    max_depth_limit = 40
-    
-    #Keep track of the total number of nodes we expand
+    options = start_node.options
+
+    def heuristic_value(puzzle):
+        if options.function == 'top':
+            return tiles_out_of_place(puzzle)
+        if options.function == 'torc':
+            return tiles_out_of_row_column(puzzle)
+        if options.function == 'md':
+            return manhattan_distance_to_goal(puzzle)
+        print('Invalid heuristic selected. Options are top, torc, and md')
+        sys.exit()
+
+    # Initial f-cost threshold is the heuristic cost of the start state
+    threshold = start_node.cost + heuristic_value(start_node.puzzle)
+
+    max_threshold = 200
     total_expanded = 0
-    
-    #Keep trying until our depth limit hits 40
-    while depth_limit < max_depth_limit:
-        
-        #Store visited nodes along the current search path
-        visited = dict()
-        visited['N'] = 0
 
-        #Mark the initial state as visited
-        visited[start_node.puzzle.id()] = True
-        
-        #Run depth-limited search starting at initial node (which points to initial state)
-        path_length = run_dfs(start_node, depth_limit, visited) 
-    
-        #See how many nodes we expanded on this iteration and add it to our total
-        total_expanded += visited['N']
-        
-        #Check to see if a solution was found
-        if path_length is not None:
-            #It was! Print out information and return the search stats
+    while threshold <= max_threshold:
+        visited = set()
+        nodes_expanded = 0
+        root_puzzle = Puzzle(start_node.puzzle.state[:])
+        visited.add(root_puzzle.id())
+
+        def ida_search(puzzle, path, g_cost, current_threshold):
+            nonlocal nodes_expanded
+            nodes_expanded += 1
+
+            f_cost = g_cost + heuristic_value(puzzle)
+            if f_cost > current_threshold:
+                return False, f_cost
+
+            if puzzle.is_solved():
+                return True, path
+
+            min_threshold = math.inf
+
+            for move in puzzle.get_moves():
+                child = Puzzle(puzzle.state[:])
+                child.do_move(move)
+                child_id = child.id()
+
+                if child_id in visited:
+                    continue
+
+                visited.add(child_id)
+                found, result = ida_search(child, path + move, g_cost + 1, current_threshold)
+                if found:
+                    return True, result
+                if result < min_threshold:
+                    min_threshold = result
+                visited.remove(child_id)
+
+            return False, min_threshold
+
+        found_solution, outcome = ida_search(root_puzzle, start_node.path, start_node.cost, threshold)
+        total_expanded += nodes_expanded
+
+        if found_solution:
+            print('IDA* SOLVED THE PUZZLE: SOLUTION = ', outcome)
             print('Expanded ', total_expanded, 'nodes')
-            print('IDS Found solution at depth', depth_limit)
-            return total_expanded, path_length
-            
-        # No solution was found at this depth limit, so increment our depth-limit    
-        depth_limit += 1
-        
-    # No solution was found at any depth-limit, so return None,None (Which signifies no solution found)
+            return total_expanded, len(outcome)
+
+        if outcome == math.inf:
+            break
+
+        threshold = outcome
+
     return None, None
-    
-def run_dfs(node, depth_limit, visited):
-    """
-    Recursive Depth-Limited Search:  
-    
-    Check node to see if it is goal, if it is, print solution and return path length
-    If not and if depth-limit hasn't been reached, recurse on all children
-    """
-    visited['N'] = visited['N'] + 1 #Increment our node expansion counter
-
-    # Check to see if this is a goal node
-    if node.puzzle.is_solved():
-        # It is! Print out solution and return solution length
-        print('Iterative Deepening SOLVED THE PUZZLE! SOLUTION = ', node.path)
-        return len(node.path)
-        
-    # Check to see if the depth limit has been reached (number of actions that have been taken)
-    if len(node.path) >= depth_limit:
-        # It has. Return None, signifying that no path was found
-        return None
-    
-    # Generate successors and recurse on them
-    
-    # Get the list of moves we can try from this node's state
-    moves = node.puzzle.get_moves()
-    
-    # For each possible move
-    for m in moves:
-        #Execute the move/action
-        node.puzzle.do_move(m)
-        node.compute_f_value()
-
-
-        #Add this move to the node's path
-        node.path = node.path + m
-        #Add 1 to node's cost
-        node.cost = node.cost + 1
-        #Check to see if we have already visited this node
-        if node.puzzle.id() not in visited:
-            #We haven't. Now we will, so add it to visited
-            visited[node.puzzle.id()] = True
-            
-            #Recurse on this new state
-            path_length = run_dfs(node, depth_limit, visited)    
-            
-            #Check to see if a solution was found down this path (return value of None means no)
-            if path_length is not None:
-                #It was! Return this solution path length to whoever called us
-                return path_length
-                
-            #Remove this state from the visited list.  We only check for duplicates along current search path
-            del visited[node.puzzle.id()]
-
-        # That move didn't lead to a solution, so lets try the next one
-        # First, though, we need to undo the move (to return puzzle to state before we tried that move)
-        node.puzzle.undo_move(m)
-        # Remove that last move we tried from the path
-        node.path = node.path[0:-1]        
-        # Remove 1 from node's cost
-        node.cost = node.cost - 1
-    
-    #Couldn't find a solution here or at any of my successors, so return None
-    #This node is not on a solution path under the depth-limit
-    return None
         
 def run_best_first_search(fringe, options):
     """
@@ -478,7 +446,7 @@ if __name__ == '__main__':
     pf = open(options.file,'r')
     
     #You can modify the maximum number of puzzles to solve if you want to test on more puzzles
-    max_to_solve = 40
+    max_to_solve = 1
     
     #Variables to keep track of solving statistics
     num_solved = 0
