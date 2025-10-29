@@ -159,15 +159,15 @@ class SearchNode():
 
         if self.options.type == 'g':
             #greedy search algorithm
-            self.f_value = 0 # Change this to implement greedy!
+            self.f_value = self.h # Change this to implement greedy!
 
         elif self.options.type == 'u':
             #uniform cost search algorithm
-            self.f_value = 0 # Change this to implement uniform cost search!
+            self.f_value = self.cost # Change this to implement uniform cost search!
 
         elif self.options.type == 'a':
             #A* search algorithm
-            self.f_value = 0 # Change this to implement A*!
+            self.f_value = self.h + self.cost # Change this to implement A*!
 
         else:
             print('Invalid search type (-t) selected: Valid options are g, u, and a')
