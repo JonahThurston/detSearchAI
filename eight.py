@@ -228,8 +228,23 @@ def tiles_out_of_row_column(puzzle):
     ######## TASK 1.4.1 BEGIN   ##########
 
     # YOUR TASK 1.4.1 CODE HERE
-    
-    return 0 #change this
+    sins = 0
+    for i in range(len(puzzle.state)):
+        val = puzzle.state[i]
+        if(val == 0):
+            continue
+        
+        actualRow = get_tile_row(i)
+        expectedRow = get_tile_row(val)
+        if (actualRow != expectedRow):
+            sins += 1
+        
+        actualCol = get_tile_column(i)
+        expectedCol = get_tile_row(val)
+        if (actualCol != expectedCol):
+            sins += 1
+
+    return sins
     
     ######## TASK 1.4.1 END   ##########
 
@@ -243,7 +258,21 @@ def manhattan_distance_to_goal(puzzle):
 
     # YOUR TASK 1.4.2 CODE HERE
     
-    return 0 #change this!
+    totalDistance = 0
+    for i in range(len(puzzle.state)):
+        val = puzzle.state[i]
+        if(val == 0):
+            continue
+        
+        actualRow = get_tile_row(i)
+        expectedRow = get_tile_row(val)
+        totalDistance += abs(expectedRow - actualRow)
+        
+        actualCol = get_tile_column(i)
+        expectedCol = get_tile_row(val)
+        totalDistance += abs(expectedCol - actualCol)
+
+    return totalDistance
     
     ######## TASK 1.4.2 END   ##########  
 
